@@ -697,7 +697,8 @@ class CornerHeuristicSanity(testClasses.TestCase):
         problem = searchAgents.CornersProblem(game_state)
         start_state = problem.getStartState()
         h0 = searchAgents.cornersHeuristic(start_state, problem)
-        succs = problem.getSuccessors(start_state)
+        succs = problem.getSuccessors(start_state)          # TODO: a call to getSuccessors changes the state of the CornersProblem
+        problem = searchAgents.CornersProblem(game_state)   # TODO: added line so that it can reset the state of the problem
         # cornerConsistencyA
         for succ in succs:
             h1 = searchAgents.cornersHeuristic(succ[0], problem)
