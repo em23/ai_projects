@@ -321,6 +321,10 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
+        if state == self.getStartState():
+                self.open_levels = [1 + 4*x for x in range(len(self.corners)-1,-1,-1)]
+                self.blocked_corners = set()
+                self.blocked_floors = set()
 
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
@@ -332,6 +336,7 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+
             level, (x, y) = state
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
@@ -494,7 +499,22 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    if problem.isGoalState(state):
+        return 0
+    
+    result = furthest = 0
+    closest = float('inf')
+    xy1 = position
+    for xy2 in foodGrid.asList():   
+        value = mazeDistance(xy1, xy2, problem.startingGameState)
+        if value < closest: closest = value        
+        if value > furthest: furthest = value
+
+    result += closest       # adding the distance to closest food source
+    result += (foodGrid.count() - 1) # adding the numbers of food sources left since I'll have to pass through all of them (except the closest one I reached above)
+    result += (furthest - result)   # adding the distance to the furthest food source after having traveled to the closest one plus the number of remaining food sources
+
+    return result
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
