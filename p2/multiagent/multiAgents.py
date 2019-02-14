@@ -95,23 +95,23 @@ class ReflexAgent(Agent):
         return successorGameState.getScore() + score;
 
 
-def mazeDistance(point1, point2, gameState):
-    """
-    Returns the maze distance between any two points, using the search functions
-    you have already built. The gameState can be any game state -- Pacman's
-    position in that state is ignored.
+# def mazeDistance(point1, point2, gameState):
+#     """
+#     Returns the maze distance between any two points, using the search functions
+#     you have already built. The gameState can be any game state -- Pacman's
+#     position in that state is ignored.
 
-    Example usage: mazeDistance( (2,4), (5,6), gameState)
+#     Example usage: mazeDistance( (2,4), (5,6), gameState)
 
-    This might be a useful helper function for your ApproximateSearchAgent.
-    """
-    x1, y1 = point1
-    x2, y2 = point2
-    walls = gameState.getWalls()
-    assert not walls[x1][y1], 'point1 is a wall: ' + str(point1)
-    assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
-    prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
-    return len(search.bfs(prob))
+#     This might be a useful helper function for your ApproximateSearchAgent.
+#     """
+#     x1, y1 = point1
+#     x2, y2 = point2
+#     walls = gameState.getWalls()
+#     assert not walls[x1][y1], 'point1 is a wall: ' + str(point1)
+#     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
+#     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
+#     return len(search.bfs(prob))
 
 def manhattanHeuristic(point1, point2):
     "The Manhattan distance"
@@ -119,11 +119,11 @@ def manhattanHeuristic(point1, point2):
     xy2 = point2
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
 
-def euclideanHeuristic(point1, point2):
-    "The Euclidean distance"
-    xy1 = point1
-    xy2 = point2
-    return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
+# def euclideanHeuristic(point1, point2):
+#     "The Euclidean distance"
+#     xy1 = point1
+#     xy2 = point2
+#     return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -219,7 +219,38 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+        v, a = self.value(gameState)
+        return a 
+
         util.raiseNotDefined()
+
+    def value(self, state, agentIndex=0, current_depth=0, best_max=float('-inf'), best_min=float('inf')):
+        if state.isWin() or state.isLose(): return self.evaluationFunction(state), 'Stop'
+        if current_depth == self.depth * state.getNumAgents(): return self.evaluationFunction(state), 'Stop'
+        if agentIndex == 0: return self.max_value(state, agentIndex, current_depth + 1, best_max, best_min)
+        if agentIndex != 0: return self.min_value(state, agentIndex, current_depth + 1, best_max, best_min)
+
+    def max_value(self, state, agentIndex, current_depth, best_max, best_min):
+        new_agentIndex = (agentIndex + 1) % state.getNumAgents()
+        v, a = float('-inf'), None
+        for action in state.getLegalActions(agentIndex):
+            successor = state.generateSuccessor(agentIndex, action)
+            max_v = self.value(successor, new_agentIndex, current_depth, best_max, best_min)[0]
+            if max_v > best_min: return max_v, action
+            if max_v > best_max: best_max = max_v
+            if v < max_v: v, a = max_v, action
+        return v, a
+
+    def min_value(self, state, agentIndex, current_depth, best_max, best_min):
+        new_agentIndex = (agentIndex + 1) % state.getNumAgents()
+        v, a = float('inf'), None
+        for action in state.getLegalActions(agentIndex):
+            successor = state.generateSuccessor(agentIndex, action)
+            min_v = self.value(successor, new_agentIndex, current_depth, best_max, best_min)[0]
+            if min_v < best_max: return min_v, action 
+            if min_v < best_min: best_min = min_v
+            if v > min_v: v, a = min_v, action
+        return v, a
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
