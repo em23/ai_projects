@@ -228,7 +228,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if state.isWin() or state.isLose(): return self.evaluationFunction(state), 'Stop'
         if current_depth == self.depth * state.getNumAgents(): return self.evaluationFunction(state), 'Stop'
         if agentIndex == 0: return self.max_value(state, agentIndex, current_depth + 1, best_max, best_min)
-        if agentIndex != 0: return self.min_value(state, agentIndex, current_depth + 1, best_max, best_min)
+        if agentIndex != 0: return self.min_value(
+            state, agentIndex, current_depth + 1, best_max, best_min)
 
     def max_value(self, state, agentIndex, current_depth, best_max, best_min):
         new_agentIndex = (agentIndex + 1) % state.getNumAgents()
@@ -265,7 +266,35 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
+        v, a = self.value(gameState)
+        return a 
+
         util.raiseNotDefined()
+
+
+    def value(self, state, agentIndex=0, current_depth=0):
+        if state.isWin() or state.isLose(): return self.evaluationFunction(state), 'Stop'
+        if current_depth == self.depth * state.getNumAgents(): return self.evaluationFunction(state), 'Stop'
+        if agentIndex == 0: return self.max_value(state, agentIndex, current_depth + 1)
+        if agentIndex != 0: return self.expected_value(state, agentIndex, current_depth + 1)
+
+    def max_value(self, state, agentIndex, current_depth):
+        new_agentIndex = (agentIndex + 1) % state.getNumAgents()
+        v, a = float('-inf'), None
+        for action in state.getLegalActions(agentIndex):
+            successor = state.generateSuccessor(agentIndex, action)
+            max_v = self.value(successor, new_agentIndex, current_depth)[0]
+            if v < max_v:   v, a = max_v, action
+        return v, a
+
+    def expected_value(self, state, agentIndex, current_depth):
+        new_agentIndex = (agentIndex + 1) % state.getNumAgents()
+        v, _ = [], None
+        for action in state.getLegalActions(agentIndex):
+            successor = state.generateSuccessor(agentIndex, action)
+            v.append(self.value(successor, new_agentIndex, current_depth)[0])
+        return (sum(v) * 1.0) / len(v), _
+
 
 def betterEvaluationFunction(currentGameState):
     """
