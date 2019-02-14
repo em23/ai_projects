@@ -81,7 +81,7 @@ class ReflexAgent(Agent):
         newFood_count = successorGameState.getNumFood()
         score += (oldFood_count - newFood_count) * 10
 
-        # Deacrising the score depending on how far from the food we go 
+        # Decreasing the score depending on how far from the food we go 
         closest = float('inf') if newFood_count else 0
         for xy2 in newFood.asList():   
             value = manhattanHeuristic(newPos, xy2)
@@ -114,13 +114,13 @@ def mazeDistance(point1, point2, gameState):
     return len(search.bfs(prob))
 
 def manhattanHeuristic(point1, point2):
-    "The Manhattan distance heuristic for a PositionSearchProblem"
+    "The Manhattan distance"
     xy1 = point1
     xy2 = point2
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
 
 def euclideanHeuristic(point1, point2):
-    "The Euclidean distance heuristic for a PositionSearchProblem"
+    "The Euclidean distance"
     xy1 = point1
     xy2 = point2
     return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
@@ -178,7 +178,36 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
+        v, a = self.value(gameState)
+        return a
+        
         util.raiseNotDefined()
+
+    def value(self, state, agentIndex=0, current_depth=0):
+        if state.isWin() or state.isLose(): return self.evaluationFunction(state), 'Stop'
+        if current_depth == self.depth * state.getNumAgents(): return self.evaluationFunction(state), 'Stop'
+        if agentIndex == 0: return self.max_value(state, agentIndex, current_depth + 1)
+        if agentIndex != 0: return self.min_value(state, agentIndex, current_depth + 1)
+
+    def max_value(self, state, agentIndex, current_depth):
+        new_agentIndex = (agentIndex + 1) % state.getNumAgents()
+        v, a = float('-inf'), None
+        for action in state.getLegalActions(agentIndex):
+            successor = state.generateSuccessor(agentIndex, action)
+            max_v = self.value(successor, new_agentIndex, current_depth)[0]
+            if v < max_v:
+                v, a = max_v, action
+        return v, a
+
+    def min_value(self, state, agentIndex, current_depth):
+        new_agentIndex = (agentIndex + 1) % state.getNumAgents()
+        v, a = float('inf'), None
+        for action in state.getLegalActions(agentIndex):
+            successor = state.generateSuccessor(agentIndex, action)
+            min_v = self.value(successor, new_agentIndex, current_depth)[0]
+            if v > min_v:
+                v, a = min_v, action
+        return v, a
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
