@@ -70,8 +70,8 @@ class ReflexAgent(Agent):
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
-        newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        # newGhostStates = successorGameState.getGhostStates()
+        # newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         
         "*** YOUR CODE HERE ***"
         score = 0
@@ -85,7 +85,7 @@ class ReflexAgent(Agent):
         closest = float('inf') if newFood_count else 0
         for xy2 in newFood.asList():   
             value = manhattanHeuristic(newPos, xy2)
-            if value < closest: closest = value      
+            closest = min(closest, value)
         score -= closest  
 
         # Increasing the score depending on how far the ghosts are 
@@ -95,35 +95,29 @@ class ReflexAgent(Agent):
         return successorGameState.getScore() + score;
 
 
-# def mazeDistance(point1, point2, gameState):
-#     """
-#     Returns the maze distance between any two points, using the search functions
-#     you have already built. The gameState can be any game state -- Pacman's
-#     position in that state is ignored.
+def mazeDistance(point1, point2, gameState):
+    """
+    Returns the maze distance between any two points, using the search functions
+    you have already built. The gameState can be any game state -- Pacman's
+    position in that state is ignored.
 
-#     Example usage: mazeDistance( (2,4), (5,6), gameState)
+    Example usage: mazeDistance( (2,4), (5,6), gameState)
 
-#     This might be a useful helper function for your ApproximateSearchAgent.
-#     """
-#     x1, y1 = point1
-#     x2, y2 = point2
-#     walls = gameState.getWalls()
-#     assert not walls[x1][y1], 'point1 is a wall: ' + str(point1)
-#     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
-#     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
-#     return len(search.bfs(prob))
+    This might be a useful helper function for your ApproximateSearchAgent.
+    """
+    x1, y1 = point1
+    x2, y2 = point2
+    walls = gameState.getWalls()
+    assert not walls[x1][y1], 'point1 is a wall: ' + str(point1)
+    assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
+    prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
+    return len(search.bfs(prob))
 
 def manhattanHeuristic(point1, point2):
     "The Manhattan distance"
     xy1 = point1
     xy2 = point2
     return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
-
-# def euclideanHeuristic(point1, point2):
-#     "The Euclidean distance"
-#     xy1 = point1
-#     xy2 = point2
-#     return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -195,8 +189,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         for action in state.getLegalActions(agentIndex):
             successor = state.generateSuccessor(agentIndex, action)
             max_v = self.value(successor, new_agentIndex, current_depth)[0]
-            if v < max_v:
-                v, a = max_v, action
+            if v < max_v:   v, a = max_v, action
         return v, a
 
     def min_value(self, state, agentIndex, current_depth):
@@ -205,8 +198,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         for action in state.getLegalActions(agentIndex):
             successor = state.generateSuccessor(agentIndex, action)
             min_v = self.value(successor, new_agentIndex, current_depth)[0]
-            if v > min_v:
-                v, a = min_v, action
+            if v > min_v:   v, a = min_v, action
         return v, a
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -302,8 +294,34 @@ def betterEvaluationFunction(currentGameState):
       evaluation function (question 5).
 
       DESCRIPTION: <write something here so we know what you did>
+      
+      1. I found the closest food source and then the further that was the lower the score would become.
+      2. Next for every ghost I checked how far they were and the further they were the larger the score would be.
+      3. Next I added the current game score in the final score as well.
+
+      4. After applying the above logic I noticed Pacman was being too careful so I weighted
+         the score received from the distance from ghosts by something less than 1 to make Pacman 
+         more fearless. 
     """
     "*** YOUR CODE HERE ***"
+    score = 0
+    pac_position = currentGameState.getPacmanPosition()
+    food_count = currentGameState.getNumFood()
+    food = currentGameState.getFood()
+
+    # Decreasing the score depending on how far from the food we go 
+    closest = float('inf') if food_count else 0
+    for xy2 in food.asList():   
+        value = manhattanHeuristic(pac_position, xy2)
+        closest = min(closest, value)
+    score -= closest 
+
+    # Increasing the score depending on how far the ghosts are 
+    for xy2 in currentGameState.getGhostPositions():   
+            score += manhattanHeuristic(pac_position, xy2) * 0.9
+
+    return currentGameState.getScore() + score;
+
     util.raiseNotDefined()
 
 # Abbreviation
